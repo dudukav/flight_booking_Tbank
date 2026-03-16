@@ -30,10 +30,10 @@ message SearchFlightsResponse {
 }
 
 enum ReservationStatus {
-    UNKNOWN = 0;
+    RESERVATION_UNKNOWN = 0;
     RESERVED = 1;
-    CANCELLED = 2;
-    COMPLETED = 3;
+    RESERVATION_CANCELLED = 2;
+    RESERVATION_COMPLETED = 3;
 }
 
 message ReserveSeatsRequest {
@@ -56,11 +56,24 @@ message ReleaseReservationResponse {
     bool success = 3;
 }
 
+enum FlightStatus {
+    FLIGHT_UNKNOWN = 0;
+    SCHEDULED = 1;
+    DEPARTED = 2;
+    FLIGHT_CANCELLED = 3;
+    FLIGHT_COMPLETED = 4;
+}
+
 message Flight {
     string id = 1;
-    string from = 2;
-    string to = 3;
-    google.protobuf.Timestamp departure_time = 4;
-    int32 total_seats = 5;
-    int32 available_seats = 6;
+    string flight_number = 2;
+    string airline = 3;
+    string origin_airport = 4;
+    string destination_airport = 5;
+    google.protobuf.Timestamp departure_time = 6;
+    google.protobuf.Timestamp arrival_time = 7;
+    int32 total_seats = 8;
+    int32 available_seats = 9;
+    float price = 10;
+    FlightStatus status = 11;
 }
