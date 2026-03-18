@@ -1,1 +1,6 @@
 flight_gen/
+booking_gen/
+flight_service/.env
+booking_service/.env
+flight_service/migrations
+booking_service/migrations

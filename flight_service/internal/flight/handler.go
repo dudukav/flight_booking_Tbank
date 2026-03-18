@@ -2,7 +2,7 @@ package flight
 
 import (
 	"context"
-	pb "flight_booking_Tbank/flight_gen"
+	pb "github.com/dudukav/flight_booking_Tbank/api/flight_gen"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -52,7 +52,7 @@ func (h *Handler) ReserveSeats(ctx context.Context, req *pb.ReserveSeatsRequest)
 		return nil, err
 	}
 
-	return h.service.ReserveSeats(ctx, req.FlightId, req.Seats)
+	return h.service.ReserveSeats(ctx, req.FlightId, req.Seats, req.BookingId)
 }
 
 func (h *Handler) ReleaseReservation(ctx context.Context, req *pb.ReleaseReservationRequest) (*pb.ReleaseReservationResponse, error) {

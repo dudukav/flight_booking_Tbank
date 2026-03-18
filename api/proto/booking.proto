@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package booking;
+
+option go_package = "./booking_gen;booking_gen";
+
+import "google/protobuf/timestamp.proto";
+
+service BookingService {
+  rpc CreateBooking(CreateBookingRequest) returns (CreateBookingResponse);
+  rpc GetBooking(GetBookingRequest) returns (GetBookingResponse);
+  rpc CancelBooking(CancelBookingRequest) returns (CancelBookingResponse);
+  rpc ListBookings(ListBookingsRequest) returns (ListBookingsResponse);
+}
+
+message CreateBookingRequest {
+  string user_id = 1;
+  string flight_id = 2;
+  string passenger_name = 3;
+  string passenger_email = 4;
+  int32 seat_count = 5;
+}
+
+message CreateBookingResponse {
+  string booking_id = 1;
+  double total_price = 2;
+}
+
+message GetBookingRequest {
+  string booking_id = 1;
+}
+
+message GetBookingResponse {
+  BookingInfo booking = 1;
+}
+
+message CancelBookingRequest {
+  string booking_id = 1;
+}
+
+message CancelBookingResponse {
+  bool success = 1;
+}
+
+message ListBookingsRequest {
+  string user_id = 1;
+}
+
+message ListBookingsResponse {
+  repeated BookingInfo bookings = 1;
+}
+
+message BookingInfo {
+  string id = 1;
+  string user_id = 2;
+  string flight_id = 3;
+  string passenger_name = 4;
+  string passenger_email = 5;
+  int32 seat_count = 6;
+  double total_price = 7;
+  BookingStatus status = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+enum BookingStatus {
+  BOOKING_UNKNOWN = 0;
+  CONFIRMED = 1;
+  CANCELLED = 2;
+}

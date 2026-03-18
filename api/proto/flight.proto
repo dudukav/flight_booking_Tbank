@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "flight_gen/;proto";
+option go_package = "./flight_gen;fkight_gen";
 
 service FlightService {
     rpc SearchFlights(SearchFlightsRequest) returns (SearchFlightsResponse);
@@ -39,6 +39,7 @@ enum ReservationStatus {
 message ReserveSeatsRequest {
     string flight_id = 1;
     int32 seats = 2;
+    string booking_id = 3;
 }
 
 message ReserveSeatsResponse {

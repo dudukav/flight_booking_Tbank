@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  postgres-booking:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: booking
+      POSTGRES_USER: postgres  
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_booking_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d booking"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+ 
+  postgres-flight:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: flight
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_flight_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flight"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  redis: 
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrate-booking:
+    image: arigaio/atlas:latest
+    volumes:
+      - ./booking_service:/app
+    working_dir: /app
+    environment:
+      ATLAS_DEV_URL: postgres://postgres:password@postgres-booking:5432/booking?sslmode=disable  
+    command: ["migrate", "apply", "--env", "docker"] 
+    depends_on:
+      postgres-booking:
+        condition: service_healthy
+
+  migrate-flight:
+    image: arigaio/atlas:latest
+    volumes:
+      - ./flight_service:/app
+    working_dir: /app
+    environment:
+      ATLAS_DEV_URL: postgres://postgres:password@postgres-flight:5432/flight?sslmode=disable
+    command: ["migrate", "apply", "--env", "docker"] 
+    depends_on:
+      postgres-flight:
+        condition: service_healthy
+
+  booking-service:
+    build:
+      context: .
+      dockerfile: booking_service/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+        - RETRY_MAX_ATTEMPTS=3
+        - CB_FAILURE_THRESHOLD=5 
+        - CB_TIMEOUT=30s
+        - DB_DSN=postgres://postgres:password@postgres-booking:5432/booking?sslmode=disable
+        - FLIGHT_SERVICE_ADDR=flight-service:8080 
+        - FLIGHT_SERVICE_API_KEY=secret-key
+        - APP_ENV=docker
+        - HTTP_PORT=8081
+    depends_on:
+      postgres-booking:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8081 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  flight-service:
+    build:
+      context: .  
+      dockerfile: flight_service/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - POSTGRES_DSN=postgres://postgres:password@postgres-flight:5432/flight?sslmode=disable
+      - REDIS_ADDR=redis:6379 
+      - FLIGHT_API_KEY=secret-key 
+      - GRPC_PORT=8080 
+      - APP_ENV=docker
+    depends_on:
+      postgres-flight:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_booking_data:
+  postgres_flight_data:
